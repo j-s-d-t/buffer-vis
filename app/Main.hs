@@ -10,7 +10,7 @@ import           Codec.Wav               (exportFile, importFile)
 import           Control.Monad
 import           Control.Monad.Primitive (PrimMonad, PrimState)
 import           Data.Array.Unboxed      (elems, listArray)
-import           Data.Audio              (Audio (Audio))
+import           Data.Audio              (Audio (Audio), SampleData)
 import           Data.Foldable           (foldlM)
 import           Data.Int                (Int32)
 import           Data.Maybe              (fromMaybe)
