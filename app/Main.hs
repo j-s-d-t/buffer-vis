@@ -4,7 +4,7 @@ module Main where
 
 import           Codec.Picture           (writePng)
 import           Codec.Picture.Types     (Image, MutableImage (..), Pixel,
-                                          PixelRGB8 (..), createMutableImage,
+                                          PixelRGBA8 (..), createMutableImage,
                                           unsafeFreezeImage, writePixel)
 import           Codec.Wav               (exportFile, importFile)
 import           Control.Monad
@@ -13,6 +13,7 @@ import           Data.Array.Unboxed      (elems, listArray)
 import           Data.Audio              (Audio (Audio), SampleData)
 import           Data.Foldable           (foldlM)
 import           Data.Int                (Int32)
+import           GHC.Float               (int2Float, float2Int)
 import           Data.Maybe              (fromMaybe)
 import           System.IO               (FilePath)
 
@@ -20,11 +21,6 @@ import           System.IO               (FilePath)
 -- | Drawing algorithm
 
 type MImage m px = MutableImage (PrimState m) px
-
-brightness :: Double -> PixelRGB8
-brightness br =
-    let level = round (br * 255)
-    in PixelRGB8 level level level
 
 -- | Create an image given a function to apply to an empty mutable image
 withMutableImage
@@ -115,41 +111,59 @@ fpart x
 rfpart :: Double -> Double
 rfpart x = 1 - fpart x
 
-points = [
-    ((0, 0), (10, 10)),
-    ((10, 10), (20, 15)),
-    ((20, 15), (100, 200))
-    ]
-
 -- Audio data
 
-file = "flutec.wav"
+file1 = "flutec.wav"
+file2 = "note.wav"
 
-inMain :: FilePath -> IO ()
-inMain path = do
-    maybeAudio <- importFile path
-    case maybeAudio :: Either String (Audio Int32) of
-        Left s -> putStrLn $ "wav decoding error: " ++ s
-        Right (Audio rate channels samples) -> do
-            putStrLn $ "rate = " ++ show rate
-            putStrLn $ "channels: " ++ show channels
-            print $ elems samples
+limit :: Float
+limit = fromIntegral (maxBound::Int32)
 
+-- | Take two mono files and zip them together
+inMain :: FilePath -> FilePath -> IO [(Float, Float)]
+inMain path1 path2 = do
+    maybeAudio1 <- importFile path1
+    maybeAudio2 <- importFile path2
+    let audioToList file =
+            case file :: Either String (Audio Int32) of
+                Left s -> []
+                Right (Audio rate channels samples) ->
+                    fmap (\a -> fromIntegral a / limit) $ elems samples
+        list1 = audioToList maybeAudio1
+        list2 = audioToList maybeAudio2
+        zipped = zip list1 list2
+    -- print zipped
+    return zipped
 
+brightness :: Double -> PixelRGBA8
+brightness br =
+    let level = round (br * 255)
+    in PixelRGBA8 0 0 0 255
 
 main :: IO ()
 main = do
-    -- Graphics
-    -- We start and end the line with sufficient clearance from the edge of the
-    -- image to be able to see the endpoints
-    img <- withMutableImage 480 480 (PixelRGB8 0 0 0) $ \m@(MutableImage w h _) ->
-        forM_ points (\((a1, a2), (b1, b2)) -> drawAntialiasedLine m a1 a2 b1 b2 brightness)
+    -- AudioData
+    audioData <- inMain file1 file2
 
+    -- Graphics
+    let imgWidth = 19066 -- in px
+        imgHeight = 19066 -- in px
+        midpointW = int2Float imgWidth / 2
+        midpointH = int2Float imgHeight / 2
+        scalePixels midpoint amp = (amp * midpoint) + midpoint
+    img <- withMutableImage imgWidth imgHeight (PixelRGBA8 255 255 255 255) $ \m@(MutableImage w h _) ->
+        let zippedList = zip audioData (tail audioData)
+        in
+        forM_ zippedList (\((a1, a2), (b1, b2)) -> 
+            drawAntialiasedLine 
+            m 
+            (float2Int $ scalePixels midpointW a1) -- start x
+            (float2Int $ scalePixels midpointH a2) -- start y
+            (float2Int $ scalePixels midpointW b1) -- end x
+            (float2Int $ scalePixels midpointH b2) -- end
+            brightness)
 
     -- Write it out to a file on disc
     writePng "test.png" img
 
-    -- AudioData
-    -- print all the samples in the file0
-    -- putStrLn $ "* Printing the content of " ++ file
-    -- inMain file
+
