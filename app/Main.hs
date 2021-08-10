@@ -7,12 +7,8 @@ import           Codec.Picture.Types         (Image, MutableImage (..), Pixel,
                                               PixelRGBA8 (..),
                                               createMutableImage,
                                               unsafeFreezeImage, writePixel)
-
-import           Graphics.Rasterific
-import           Graphics.Rasterific.Texture
-
 import           Codec.Wav                   (exportFile, importFile)
-import           Control.Monad
+import           Control.Monad               (forM_)
 import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import           Data.Array.Unboxed          (elems, listArray)
 import           Data.Audio                  (Audio (Audio), SampleData)
@@ -20,6 +16,10 @@ import           Data.Foldable               (foldlM)
 import           Data.Int                    (Int32)
 import           Data.Maybe                  (fromMaybe)
 import           GHC.Float                   (float2Int, int2Float)
+import           Graphics.Rasterific         (Cap (CapRound), Join (JoinRound),
+                                              V2 (V2), line, renderDrawing,
+                                              stroke, withTexture)
+import           Graphics.Rasterific.Texture (uniformTexture)
 import           System.IO                   (FilePath)
 
 
@@ -29,15 +29,15 @@ import           System.IO                   (FilePath)
 
 -- Audio data
 
-file1 = "sounds/fireplace.wav"
-file2 = "sounds/fireplace-offset.wav"
+file1 = "sounds/alarm.wav"
+file2 = "sounds/fireplace.wav"
 
 limit :: Float
 limit = fromIntegral (maxBound::Int32)
 
 -- | Take two mono files and zip them together
-inMain :: FilePath -> FilePath -> IO [(Float, Float)]
-inMain path1 path2 = do
+zipAudio :: FilePath -> FilePath -> IO [(Float, Float)]
+zipAudio path1 path2 = do
     maybeAudio1 <- importFile path1
     maybeAudio2 <- importFile path2
     let audioToList file =
@@ -53,19 +53,24 @@ inMain path1 path2 = do
 main :: IO ()
 main = do
     -- AudioData
-    audioData <- inMain file1 file2
+    audio <- zipAudio file1 file2
 
     -- Drawing
-    let zippedList = zip audioData (tail audioData)
+    let zippedList = zip audio (tail audio)
         -- imgWidth = 19866 -- in px
         -- imgHeight = 19866 -- in px
-        imgWidth = 4000 -- in px
-        imgHeight = 4000 -- in px
+        imgWidth = 2000 -- in px
+        imgHeight = 2000 -- in px
         midpointW = int2Float imgWidth / 2
         midpointH = int2Float imgHeight / 2
+
+        -- Translate onto a canvas
         scalePixels midpoint amp = (amp * midpoint) + midpoint
+
+        -- Set colours
+        opacity = 0.25::Float
         white = PixelRGBA8 255 255 255 255
-        drawColor = PixelRGBA8 0 0 0 20
+        drawColor = PixelRGBA8 0 0 0 $ round $ 255 * opacity
         img = renderDrawing imgWidth imgHeight white $ do
             forM_ zippedList (\((a1, a2), (b1, b2)) ->
                 withTexture (uniformTexture drawColor) $
@@ -76,6 +81,6 @@ main = do
                             )
 
     -- Write it out to a file on disc
-    writePng "test.png" img
+    writePng "output.png" img
 
 
