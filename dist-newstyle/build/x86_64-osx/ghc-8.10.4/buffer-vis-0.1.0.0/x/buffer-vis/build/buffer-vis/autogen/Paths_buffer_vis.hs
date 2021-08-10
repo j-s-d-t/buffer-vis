@@ -30,12 +30,12 @@ version :: Version
 version = Version [0,1,0,0] []
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 
-bindir     = "/Users/joes/.cabal/bin"
-libdir     = "/Users/joes/.cabal/lib/x86_64-osx-ghc-8.10.4/buffer-vis-0.1.0.0-inplace-buffer-vis"
-dynlibdir  = "/Users/joes/.cabal/lib/x86_64-osx-ghc-8.10.4"
-datadir    = "/Users/joes/.cabal/share/x86_64-osx-ghc-8.10.4/buffer-vis-0.1.0.0"
-libexecdir = "/Users/joes/.cabal/libexec/x86_64-osx-ghc-8.10.4/buffer-vis-0.1.0.0"
-sysconfdir = "/Users/joes/.cabal/etc"
+bindir     = "/Users/joe/.cabal/bin"
+libdir     = "/Users/joe/.cabal/lib/x86_64-osx-ghc-8.10.4/buffer-vis-0.1.0.0-inplace-buffer-vis"
+dynlibdir  = "/Users/joe/.cabal/lib/x86_64-osx-ghc-8.10.4"
+datadir    = "/Users/joe/.cabal/share/x86_64-osx-ghc-8.10.4/buffer-vis-0.1.0.0"
+libexecdir = "/Users/joe/.cabal/libexec/x86_64-osx-ghc-8.10.4/buffer-vis-0.1.0.0"
+sysconfdir = "/Users/joe/.cabal/etc"
 
 getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: IO FilePath
 getBinDir = catchIO (getEnv "buffer_vis_bindir") (\_ -> return bindir)
