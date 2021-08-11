@@ -33,21 +33,21 @@ import           Data.Array (Array, listArray, bounds)
 -- Audio data
 
 file1 = "sounds/fireplace.wav"
-file2 = "sounds/fireplace.wav"
+file2 = "sounds/alarm-reversed.wav"
 
 limit :: Float
 limit = fromIntegral (maxBound::Int32)
 
 -- | Take two mono files and zip them together
-zipAudio :: FilePath -> FilePath -> IO [(Float, Float)]
-zipAudio path1 path2 = do
+zipAudio :: FilePath -> FilePath -> Float -> IO [(Float, Float)]
+zipAudio path1 path2 scaleFactor = do
     maybeAudio1 <- importFile path1
     maybeAudio2 <- importFile path2
     let audioToList file =
             case file :: Either String (Audio Int32) of
                 Left s -> []
                 Right (Audio rate channels samples) ->
-                    (\a -> fromIntegral a / limit) <$> elems samples
+                    (\a -> fromIntegral a / limit * scaleFactor) <$> elems samples
         list1 = audioToList maybeAudio1
         list2 = audioToList maybeAudio2
         zipped = zip list1 list2
@@ -74,8 +74,8 @@ polToCar (amp, ph) = (amp * cos ph, amp * sin ph)
 main :: IO ()
 main = do
     -- AudioData
-    -- audio <- zipAudio file1 file2 -- 2 channel audio
-    audio <- getPolarFromWav file1 -- 1 channel FFT
+    audio <- zipAudio file1 file2 2.0 -- 2 channel audio
+    -- audio <- getPolarFromWav file1 -- 1 channel FFT
 
     -- Drawing
     let zippedList = zip audio (tail audio)
