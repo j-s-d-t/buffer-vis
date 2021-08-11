@@ -30,9 +30,9 @@
   (major1) == 3 && (major2) <  3 || \
   (major1) == 3 && (major2) == 3 && (minor) <= 5)
 #endif /* MIN_VERSION_JuicyPixels */
-/* package Rasterific-0.7.5.3 */
+/* package Rasterific-0.7.5.4 */
 #ifndef VERSION_Rasterific
-#define VERSION_Rasterific "0.7.5.3"
+#define VERSION_Rasterific "0.7.5.4"
 #endif /* VERSION_Rasterific */
 #ifndef MIN_VERSION_Rasterific
 #define MIN_VERSION_Rasterific(major1,major2,minor) (\
@@ -60,26 +60,36 @@
   (major1) == 4 && (major2) <  14 || \
   (major1) == 4 && (major2) == 14 && (minor) <= 1)
 #endif /* MIN_VERSION_base */
-/* package primitive-0.7.1.0 */
+/* package dsp-0.2.5.1 */
+#ifndef VERSION_dsp
+#define VERSION_dsp "0.2.5.1"
+#endif /* VERSION_dsp */
+#ifndef MIN_VERSION_dsp
+#define MIN_VERSION_dsp(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  2 || \
+  (major1) == 0 && (major2) == 2 && (minor) <= 5)
+#endif /* MIN_VERSION_dsp */
+/* package primitive-0.7.2.0 */
 #ifndef VERSION_primitive
-#define VERSION_primitive "0.7.1.0"
+#define VERSION_primitive "0.7.2.0"
 #endif /* VERSION_primitive */
 #ifndef MIN_VERSION_primitive
 #define MIN_VERSION_primitive(major1,major2,minor) (\
   (major1) <  0 || \
   (major1) == 0 && (major2) <  7 || \
-  (major1) == 0 && (major2) == 7 && (minor) <= 1)
+  (major1) == 0 && (major2) == 7 && (minor) <= 2)
 #endif /* MIN_VERSION_primitive */
 
-/* tool gcc-11.0.3 */
+/* tool gcc-12.0.0 */
 #ifndef TOOL_VERSION_gcc
-#define TOOL_VERSION_gcc "11.0.3"
+#define TOOL_VERSION_gcc "12.0.0"
 #endif /* TOOL_VERSION_gcc */
 #ifndef MIN_TOOL_VERSION_gcc
 #define MIN_TOOL_VERSION_gcc(major1,major2,minor) (\
-  (major1) <  11 || \
-  (major1) == 11 && (major2) <  0 || \
-  (major1) == 11 && (major2) == 0 && (minor) <= 3)
+  (major1) <  12 || \
+  (major1) == 12 && (major2) <  0 || \
+  (major1) == 12 && (major2) == 0 && (minor) <= 0)
 #endif /* MIN_TOOL_VERSION_gcc */
 /* tool ghc-8.10.4 */
 #ifndef TOOL_VERSION_ghc

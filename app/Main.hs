@@ -10,7 +10,7 @@ import           Codec.Picture.Types         (Image, MutableImage (..), Pixel,
 import           Codec.Wav                   (exportFile, importFile)
 import           Control.Monad               (forM_)
 import           Control.Monad.Primitive     (PrimMonad, PrimState)
-import           Data.Array.Unboxed          (elems, listArray)
+import           Data.Array.Unboxed          (elems)
 import           Data.Audio                  (Audio (Audio), SampleData)
 import           Data.Foldable               (foldlM)
 import           Data.Int                    (Int32)
@@ -21,6 +21,9 @@ import           Graphics.Rasterific         (Cap (CapRound), Join (JoinRound),
                                               stroke, withTexture)
 import           Graphics.Rasterific.Texture (uniformTexture)
 import           System.IO                   (FilePath)
+import           Numeric.Transform.Fourier.FFT (fft, rfft)
+import           Data.Complex (Complex((:+)), magnitude, polar, realPart, imagPart)
+import           Data.Array (Array, listArray, bounds)
 
 
 -- | Drawing algorithm
@@ -29,7 +32,7 @@ import           System.IO                   (FilePath)
 
 -- Audio data
 
-file1 = "sounds/alarm.wav"
+file1 = "sounds/fireplace.wav"
 file2 = "sounds/fireplace.wav"
 
 limit :: Float
@@ -50,10 +53,29 @@ zipAudio path1 path2 = do
         zipped = zip list1 list2
     return zipped
 
+-- | Take two mono files and zip them together
+getPolarFromWav :: FilePath -> IO [(Float, Float)]
+getPolarFromWav path = do
+    maybeAudio <- importFile path
+    let audioToList file =
+            case file :: Either String (Audio Int32) of
+                Left s -> []
+                Right (Audio rate channels samples) ->
+                    (\a -> fromIntegral a / limit * 0.001) <$> elems samples
+        realFFT = elems $ fmap (polToCar . polar) $ rfft $ listArray (0, length (audioToList maybeAudio) - 2) $ audioToList maybeAudio
+    return realFFT
+
+
+
+polToCar :: Floating b => (b, b) -> (b, b)
+polToCar (amp, ph) = (amp * cos ph, amp * sin ph)
+
+
 main :: IO ()
 main = do
     -- AudioData
-    audio <- zipAudio file1 file2
+    -- audio <- zipAudio file1 file2 -- 2 channel audio
+    audio <- getPolarFromWav file1 -- 1 channel FFT
 
     -- Drawing
     let zippedList = zip audio (tail audio)
