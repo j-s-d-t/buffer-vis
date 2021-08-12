@@ -26,8 +26,6 @@ import           Data.Complex (Complex((:+)), magnitude, polar, realPart, imagPa
 import           Data.Array (Array, listArray, bounds)
 
 
--- | Drawing algorithm
-
 
 
 -- Audio data
@@ -37,9 +35,9 @@ file = "sounds/alarm.wav"
 limit :: Float
 limit = fromIntegral (maxBound::Int32)
 
--- | Take two mono files and zip them together
-zipAudio :: FilePath -> Float -> IO [(Float, Float)]
-zipAudio path scaleFactor = do
+-- | Take the audio data, scale it, duplicate it and offset the duplicate by a given number of samples (waveOffset)
+zipAudio :: FilePath -> Float -> Int -> IO [(Float, Float)]
+zipAudio path scaleFactor waveOffset = do
     maybeAudio <- importFile path
     let audioToList file =
             case file :: Either String (Audio Int32) of
@@ -47,30 +45,14 @@ zipAudio path scaleFactor = do
                 Right (Audio rate channels samples) ->
                     (\a -> fromIntegral a / limit * scaleFactor) <$> elems samples
         list = audioToList maybeAudio
-        zipped = zip list (drop 256 list) 
+        zipped = zip list (drop waveOffset list) 
     return zipped
-
--- polToCar :: Floating b => (b, b) -> (b, b)
--- polToCar (amp, ph) = (amp * cos ph, amp * sin ph)
-
--- -- | Take two mono files and zip them together
--- getPolarFromWav :: FilePath -> IO [(Float, Float)]
--- getPolarFromWav path = do
---     maybeAudio <- importFile path
---     let audioToList file =
---             case file :: Either String (Audio Int32) of
---                 Left s -> []
---                 Right (Audio rate channels samples) ->
---                     (\a -> fromIntegral a / limit * 0.001) <$> elems samples
---         realFFT = elems $ fmap (polToCar . polar) $ rfft $ listArray (0, length (audioToList maybeAudio) - 2) $ audioToList maybeAudio
---     return realFFT
 
 
 main :: IO ()
 main = do
     -- AudioData 
-    audio <- zipAudio file 3 -- file and multiplier
-    -- audio <- getPolarFromWav file1 -- 1 channel FFT
+    audio <- zipAudio file 3 256 -- file, multiplier (1 = original) and offset (in samples)
 
     -- Drawing
     let zippedList = zip audio (tail audio)
