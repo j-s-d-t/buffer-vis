@@ -32,49 +32,44 @@ import           Data.Array (Array, listArray, bounds)
 
 -- Audio data
 
-file1 = "sounds/fireplace.wav"
-file2 = "sounds/alarm-reversed.wav"
+file = "sounds/alarm.wav"
 
 limit :: Float
 limit = fromIntegral (maxBound::Int32)
 
 -- | Take two mono files and zip them together
-zipAudio :: FilePath -> FilePath -> Float -> IO [(Float, Float)]
-zipAudio path1 path2 scaleFactor = do
-    maybeAudio1 <- importFile path1
-    maybeAudio2 <- importFile path2
-    let audioToList file =
-            case file :: Either String (Audio Int32) of
-                Left s -> []
-                Right (Audio rate channels samples) ->
-                    (\a -> fromIntegral a / limit * scaleFactor) <$> elems samples
-        list1 = audioToList maybeAudio1
-        list2 = audioToList maybeAudio2
-        zipped = zip list1 list2
-    return zipped
-
--- | Take two mono files and zip them together
-getPolarFromWav :: FilePath -> IO [(Float, Float)]
-getPolarFromWav path = do
+zipAudio :: FilePath -> Float -> IO [(Float, Float)]
+zipAudio path scaleFactor = do
     maybeAudio <- importFile path
     let audioToList file =
             case file :: Either String (Audio Int32) of
                 Left s -> []
                 Right (Audio rate channels samples) ->
-                    (\a -> fromIntegral a / limit * 0.001) <$> elems samples
-        realFFT = elems $ fmap (polToCar . polar) $ rfft $ listArray (0, length (audioToList maybeAudio) - 2) $ audioToList maybeAudio
-    return realFFT
+                    (\a -> fromIntegral a / limit * scaleFactor) <$> elems samples
+        list = audioToList maybeAudio
+        zipped = zip list (drop 256 list) 
+    return zipped
 
+-- polToCar :: Floating b => (b, b) -> (b, b)
+-- polToCar (amp, ph) = (amp * cos ph, amp * sin ph)
 
-
-polToCar :: Floating b => (b, b) -> (b, b)
-polToCar (amp, ph) = (amp * cos ph, amp * sin ph)
+-- -- | Take two mono files and zip them together
+-- getPolarFromWav :: FilePath -> IO [(Float, Float)]
+-- getPolarFromWav path = do
+--     maybeAudio <- importFile path
+--     let audioToList file =
+--             case file :: Either String (Audio Int32) of
+--                 Left s -> []
+--                 Right (Audio rate channels samples) ->
+--                     (\a -> fromIntegral a / limit * 0.001) <$> elems samples
+--         realFFT = elems $ fmap (polToCar . polar) $ rfft $ listArray (0, length (audioToList maybeAudio) - 2) $ audioToList maybeAudio
+--     return realFFT
 
 
 main :: IO ()
 main = do
-    -- AudioData
-    audio <- zipAudio file1 file2 2.0 -- 2 channel audio
+    -- AudioData 
+    audio <- zipAudio file 3 -- file and multiplier
     -- audio <- getPolarFromWav file1 -- 1 channel FFT
 
     -- Drawing
